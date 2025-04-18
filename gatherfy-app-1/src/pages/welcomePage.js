@@ -19,7 +19,7 @@ export default function WelcomePage() {
         onClick={handleLogin}
         className="bg-green-500 text-white px-6 py-3 rounded-lg text-xl font-bold hover:bg-green-600 transition"
       >
-        Log in with Spotify
+        Login with Spotify Account
       </button>
     </div>
   );

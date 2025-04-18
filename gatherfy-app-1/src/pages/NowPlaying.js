@@ -117,6 +117,7 @@ export default function NowPlaying() {
 const fetchUserData = async () => {
     // If user is not fetched, proceed 
   const params = new URLSearchParams(window.location.search);
+ console.log(params);
   const code = params.get("code");
 
   if (!code) {

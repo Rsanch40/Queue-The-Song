@@ -5,6 +5,7 @@ const CLIENT_SECRET = process.env.REACT_APP_SPOTIFY_CLIENT_SECRET;
 const REDIRECT_URI =process.env.REACT_APP_SPOTIFY_REDIRECT_URL;
 
 const API_URL = process.env.REACT_APP_API_URL;
+console.log("API URL:", process.env.REACT_APP_API_URL);
 
 const authenticateWithSpotify = () => {
   const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(
@@ -175,7 +176,7 @@ const searchTracks = async (query) => {
   }
   try {
 
-    const response = await axios.get(`${API_URL}/api/spotify/search?query=${encodeURIComponent(query)}`, {
+    const response = await axios.get(`${API_URL}/spotify/search?query=${encodeURIComponent(query)}`, {
       withCredentials: true,
     });
 

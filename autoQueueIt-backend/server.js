@@ -32,6 +32,13 @@ const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REDIRECT_URI =process.env.SPOTIFY_REDIRECT_URI;
 
+//console.log("CLIENT_ID from .env:", process.env.SPOTIFY_CLIENT_ID);
+//console.log("REDIRECT_URI: ", REDIRECT_URI);
+
+app.get("/test", (req, res) => {
+  res.json({ message: "API test successful!" });
+});
+
 
 app.post("/save-user", async (req, res) => {
   const { user_id, user_email } = req.body;
@@ -117,8 +124,10 @@ const saveUser = async (userEmail, userId) => {
 
 };
 
+
 // **Exchange authorization code for access token**
 app.post("/auth/token", async (req, res) => {
+ //console.log("Server entered');
   const { code } = req.body;
   //console.log("code: ", code);
   //console.log("once");
@@ -189,6 +198,7 @@ app.post("/auth/token", async (req, res) => {
     res.status(400).json({ error: "Token exchange failed" });
   }
 });
+
 
 // **Refresh Spotify Token**
 app.post("/auth/refresh", async (req, res) => {
@@ -299,7 +309,7 @@ app.get("/currentQueue", async (req, res) => {
 });
 
 // get search results from spoitfy's API
-app.get("/api/spotify/search", async (req, res) => {
+app.get("/spotify/search", async (req, res) => {
   const { query } = req.query;
   const { userId } = req.cookies;
   //console.log("user id in search", userId);
@@ -446,7 +456,7 @@ app.post("/check-track", async(req, res) => {
 
     // song is not in db
     if(rows.length === 0) {
-      console.log("Song is not in db");
+      //console.log("Song is not in db");
       res.json({ message: "Song is not in database" });
       return;
     }
@@ -476,5 +486,7 @@ app.post("/check-track", async(req, res) => {
   }
 });
 
+
+
 const PORT = process.env.PORT;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
