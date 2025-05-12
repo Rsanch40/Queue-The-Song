@@ -202,6 +202,9 @@ app.post("/auth/token", async (req, res) => {
 
 // **Refresh Spotify Token**
 app.post("/auth/refresh", async (req, res) => {
+  if(req.cookies.userId == null) {
+    return;
+  }
   const { userId } = req.cookies.userId;
   //console.log("refreshing");
 

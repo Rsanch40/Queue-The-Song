@@ -4,12 +4,155 @@ import axios from "axios";
 import { authenticateWithSpotify, refreshAccessToken, fetchAccessToken, getCurrentlyPlaying, getQueue, searchTracks,
           saveSongPair, saveUserId, getUserSongs, getTrack, checkAndQueueIf, deleteSongPair,
           getUserInfo, logUserOut } from "../useSpotifyAuth";
+import musicBackground from '../images/musicBackground.png';
 import arrowImage from '../images/arrow-png-image.png';
 import expLyricsIcon from '../images/explicitLyricsIcon.png';
 import deleteIcon from '../images/deleteIcon.png';
 import settingsIcon from '../images/settingsIcon.png'
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
+
+import ParticleBackground from '../components/ParticleBackground';
+
+
+
+// UI for saved songs in user's table
+// change the background of the saved songs' cells
+const SongCell = ({ cell }) => {
+  const imgRef = useRef(null);
+  const [gradient, setGradient] = useState('linear-gradient(to top, #ffffff, #f0f0f0)');
+
+  useEffect(() => {
+    if (imgRef.current && cell?.albumArt) {
+      imgRef.current.crossOrigin = 'anonymous';
+      imgRef.current.onload = () => {
+        try {
+          const colorThief = new window.ColorThief();
+          const [r, g, b] = colorThief.getColor(imgRef.current);
+
+          const start = `rgb(${r}, ${g}, ${b})`;
+          const end = `rgba(${r}, ${g}, ${b}, 0.4)`; // softer fade
+
+          setGradient(`linear-gradient(to top, ${start}, ${end})`);
+        } catch (err) {
+          console.error('Color extraction error:', err);
+        }
+      };
+    }
+  }, [cell?.albumArt]);
+
+  return cell ? (
+    <div
+      className="flex flex-col p-2 rounded text-white"
+      style={{
+        background: gradient,
+      }}
+    >
+      {cell.albumArt && (
+        <img
+          ref={imgRef}
+          src={cell.albumArt}
+          alt="Album Art"
+          className="w-14 h-15 mb-1 rounded"
+        />
+      )}
+      <strong className="max-w-[10rem] overflow-hidden text-ellipsis whitespace-nowrap">
+        {cell.name}
+      </strong>
+      <p className="text-s max-w-[10rem] overflow-hidden text-ellipsis whitespace-nowrap">
+        {cell.artist}
+      </p>
+    </div>
+  ) : null;
+};
+
+
+// UI for Current Track playing
+// change background of song row
+const CurrTrack =({ track }) => {
+  const imgcurrRef = useRef(null);
+  const [currgradient, setcurrGradient] = useState('linear-gradient(to bottom, #ffffff, #f0f0f0)');
+
+  useEffect(() => {
+    
+    if (imgcurrRef.current && track?.albumArt) {
+      imgcurrRef.current.crossOrigin = 'anonymous';
+      imgcurrRef.current.onload = () => {
+        try {
+          const colorcurrThief = new window.ColorThief();
+
+          const [r1, g1, b1] = colorcurrThief.getColor(imgcurrRef.current);
+          const startcurr = `rgb(${r1}, ${g1}, ${b1})`;
+          const endcurr = `rgba(${r1}, ${g1}, ${b1}, 0.1)`; // softer fade
+          
+          setcurrGradient(`linear-gradient(to bottom, ${startcurr}, ${endcurr})`);
+        } catch (err) {
+          console.error('Color extraction error:', err);
+        }
+      };
+    }
+  }, [track.albumArt]);
+
+  return track ? (
+      <div style={{
+        background: currgradient,
+      }}>
+      <h3 className="text-white mb-2 p-1">Now Playing</h3>
+      <div className="flex items-center space-x-4" >
+        <img ref={imgcurrRef} src={track.albumArt} alt="Album cover" className="h-[5.5rem] w-[5.5rem] rounded-lg p-1" />
+        <div className="flex flex-col">
+        <p className="text-white max-w-[13rem] overflow-hidden text-ellipsis whitespace-nowrap">
+          <strong>{track.name}</strong>
+        </p>
+        <p className="text-white max-w-[13rem] overflow-hidden text-ellipsis whitespace-nowrap">{track.artist}</p>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+};
+
+// UI for songs in queue
+const SongRow = ({ song }) => {
+  const imgRef = useRef(null);
+  const [gradient, setGradient] = useState("linear-gradient(to right, #1f2937, #111827)");
+
+  useEffect(() => {
+    if (imgRef.current && song.albumArt) {
+      imgRef.current.crossOrigin = "anonymous";
+      imgRef.current.onload = () => {
+        try {
+          const colorThief = new window.ColorThief();
+          const [r, g, b] = colorThief.getColor(imgRef.current);
+          setGradient(`linear-gradient(to right, rgb(${r},${g},${b}), rgba(${r},${g},${b}, 0.2))`);
+        } catch (err) {
+          console.error("Color extraction failed", err);
+        }
+      };
+    }
+  }, [song.albumArt]);
+
+  return (
+    <tr style={{ background: gradient }} className="h-[3rem] text-white rounded">
+      <td className="w-[4rem] p-1">
+        <img
+          ref={imgRef}
+          src={song.albumArt}
+          alt="Album cover"
+          className="w-full h-full object-cover rounded"
+        />
+      </td>
+      <td className="text-xs px-2 py-1 max-w-[2rem] overflow-hidden text-ellipsis whitespace-nowrap">
+        {song.name}
+      </td>
+      <td className="text-xs px-2 py-1 max-w-[2rem] overflow-hidden text-ellipsis whitespace-nowrap">
+        {song.artist}
+      </td>
+    </tr>
+  );
+};
+
+
 
 export default function NowPlaying() {
   
@@ -196,7 +339,7 @@ const fetchUserData = async () => {
   // default to an empty table if nothing saved in db
   useEffect(() => {
     setTableData(
-      Array(5).fill(null)
+      Array(30).fill(null)
       .map(() =>
         Array(3).fill(null).map((_, colIndex) => 
           colIndex === 1 ? { imgSrc: arrowImage } : null  // fill second (1) column with arrows
@@ -223,7 +366,7 @@ const fetchUserData = async () => {
         if(currentSong  && (currentSong.id !== lastQueuedSongRef.current)) {
           const result = await checkAndQueueIf(currentSong.id);  // check if current song playing is a paired song
           if(result != "Song is not in database"){
-            console.log("###########Queueing Song: ", currentSong.name);
+            console.log("###########Queueing Song");
             setLastQueuedSong(currentSong.id);
             lastQueuedSongRef.current = currentSong.id;
             localStorage.setItem("lastQueuedSong", currentSong.id); // Store in local storage
@@ -305,7 +448,7 @@ const fetchUserData = async () => {
 
     setTableData(prevTable =>
       prevTable.map((row, rowIndex) =>
-        row.map((cell, colIndex) =>
+        row.map((cell, colIndex) => 
           rowIndex === selectedCell.row && colIndex === selectedCell.col
             ? {
                 name: track.name,
@@ -370,9 +513,13 @@ const fetchUserData = async () => {
           // Mark button as disabled
           setRowToDelete(rowIndex);
           setTimeout(() => {
-            setTableData((prevTableData) =>
-              prevTableData.filter((_, i) => i !== rowIndex)
+            setTableData((prevTableData) => {
+              const updatedTable = prevTableData.filter((_, i) => i !== rowIndex);
+            const emptyRow = Array(prevTableData[0]?.length || 1).fill(null).map((_, colIndex) => 
+              colIndex === 1 ? { imgSrc: arrowImage } : null  // fill second (1) column with arrows
             );
+            return [...updatedTable, emptyRow];
+          });
             setRowToDelete(null);
           }, 300); // match with animation duration
 
@@ -398,16 +545,27 @@ const fetchUserData = async () => {
   };
 
   while(!loadedUser && !loadedT) {
-    return <p>Loading</p>;
+    return (
+    <div className="text-center"> 
+    <p>Loading</p>
+    </div>
+    )
   }
 
 
   // Visual Frontend
   return (
-    <div className = "min-h-screen bg-gray-900 pt-10"> 
 
+    /*
+    <div className = "min-h-screen bg-sky-950 pt-10 bg-[url('../images/musicBackground.png')]"> 
+    */
+
+  <div
+    className="min-h-screen bg-blue-950 relative overflow-hidden pt-10">
+       <ParticleBackground/>
+       
     {/* Log Out Section */}
-    <div className= "fixed top-4 right-4 h-[3rem] w-[4rem] flex flex-col items-center bg-gray-600 rounded ">  
+    <div className= "fixed top-4 right-4 h-[3rem] w-[4rem] flex flex-col items-center bg-gray-500 rounded ">  
       <Popup
       trigger={<img
         src={settingsIcon}
@@ -431,7 +589,7 @@ const fetchUserData = async () => {
 
 
       {/* Search Section */}
-        <div className="flex flex-col items-center mt-16 ">
+        <div className="flex flex-col relative z-10 items-center mt-16 ">
           <div className="w-full max-w-lg text-center">
               <input
                 id="search-bar"
@@ -461,8 +619,9 @@ const fetchUserData = async () => {
           </div>
 
       {/* Song Table */}
-      <div className='mt-10 w-[40rem] flex justify-center bg-gray-600 '>
-      <table className="w-full border-collapse">
+      <div className="container relative px-10 z-10">
+      <div className='mt-10 w-[40rem] flex justify-center bg-gray-400 overflow-hidden rounded-2xl shadow-md'>
+      <table className="w-[100%] border-collapse">
       <tbody>
         {Array.isArray(tableData) && tableData.map((row, rowIndex) => (
           <tr key={rowIndex} className={`transition-opacity duration-300 ${
@@ -473,8 +632,8 @@ const fetchUserData = async () => {
                 key={colIndex}
                 className={` ${
                       selectedCell?.row === rowIndex && selectedCell?.col === colIndex 
-                        ? "bg-blue-500 text-white"  // Highlighted style
-                        : "bg-gray-600 text-gray-300" // Default style
+                        ? "bg-blue-200 text-white"  // Highlighted style
+                        : "bg-gray-400 text-gray-950" // Default style
                     } p-4 w-40 h-16 
                   ${
                   colIndex !== 1 ? 'cursor-pointer hover:bg-gray-700 hover:-translate-y-1 transition ' : ''
@@ -485,17 +644,19 @@ const fetchUserData = async () => {
               >
                 {/* Column 1 (Arrow Image) */}
                 {colIndex === 1 ? (
-                  <img src={cell?.imgSrc} alt="Arrow" className="w-8 h-8 mx-auto" />
+                  <img src={cell?.imgSrc} alt="Arrow" className="w-10 h-10 mx-auto" />
                 ) : (
                   // Column 0 or 2 (Song Information and Delete Button)
                   cell ? (
+                    <SongCell cell={cell}/>
+                    /*
                     <div className="flex flex-col items-center">
                       {cell.albumArt && (
                         <img src={cell.albumArt} alt="Album Cover" className="w-12 h-12 mb-1 rounded" />
                       )}
                       <strong className="max-w-[10rem] overflow-hidden text-ellipsis whitespace-nowrap">{cell.name}</strong>
                       <p className="text-s max-w-[10rem] overflow-hidden text-ellipsis whitespace-nowrap">{cell.artist}</p>
-                      {/* Delete Button 
+                      { Delete Button 
                       <button
                         type="button"
                         id="delete-button"
@@ -531,8 +692,9 @@ const fetchUserData = async () => {
                             d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"
                           />
                         </svg>
-                      </button> */}
+                      </button> }
                     </div>
+                    */
                   ) : (
                     'Click to select song'
                   )
@@ -541,7 +703,7 @@ const fetchUserData = async () => {
       ))}
 
         {/* Extra Column: Save Button */}
-        <td className="border border-gray-600 p-4 w-20 text-center">
+        <td className="border border-gray-400 p-4 w-20 text-center">
         {Array.isArray(row) && row.filter((cell, colIndex) => {
           // Exclude the middle column (index 1) where the arrow image is located
           return colIndex !== 1 && cell !== null && cell.albumArt;
@@ -584,13 +746,17 @@ const fetchUserData = async () => {
           </table>
 
           </div>
+          </div>
 
 
       {/* Corner Box Showing Current Song Playing and Queue */ }
-      <div className=" fixed bottom-4 right-4 h-[20rem] w-[20rem] bg-gray-700 shadow-lg rounded-lg ">
+      <div className=" fixed bottom-4 right-4 h-[20rem] w-[20rem] bg-gray-700 overflow-hidden rounded-2xl shadow-md
+          sm:bottom-8 md:bottom-10">
             
             {/* Now Playing */}
             {currentTrack ? (
+              <CurrTrack track={currentTrack} />
+              /*
               <div>
                 <h3 className="text-white mb-2 p-1">Now Playing</h3>
                 <div className="flex items-center space-x-4">
@@ -600,34 +766,25 @@ const fetchUserData = async () => {
                   </p>
                 </div>
               </div>
+              */
             ) : (
-              <p>No song currently playing</p>
+              <div className="flex flex-col items-center align-center">
+              <p className="text-white">No song currently playing</p>
+              </div>
             )}
 
             {/* Current Queue */ }
-            <h3 className="text-white p-1">Up Next: </h3>
+            
             {queue?.length > 0 ? (
               <table className="w-full border-collapse">
                 <tbody className="h-full">
                   {queue.map((song, index) => (
-                    <tr key={index} className="h-[3rem] border-b border-gray-500">
-                      <td className="w-[3.3rem] p-1">
-                        <img src={song.albumArt} alt="Album cover" className='w-full h-full object-cover rounded' />
-                      </td>
-                      <td className="text-gray-300 text-xs px-2 py-1 max-w-[2rem] overflow-hidden text-ellipsis whitespace-nowrap">      
-                            {song.name}
-                      </td>
-                      <td className="text-gray-300 text-xs px-2 py-1 max-w-[2rem] overflow-hidden text-ellipsis whitespace-nowrap">
-                            {song.artist}
-                      </td>
-                    </tr>
+                    <SongRow key={index} song={song}/>
                   ))}
                 </tbody>
               </table>
             ) : (
-              <div className="">
-              <p>Queue is empty</p>
-              </div>
+              null
             )}
       </div>
 
