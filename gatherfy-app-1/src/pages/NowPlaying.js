@@ -43,7 +43,7 @@ const SongCell = ({ cell }) => {
 
   return cell ? (
     <div
-      className="flex flex-col p-2 rounded text-white"
+      className="flex flex-col w-[100%] rounded text-white"
       style={{
         background: gradient,
       }}
@@ -53,13 +53,13 @@ const SongCell = ({ cell }) => {
           ref={imgRef}
           src={cell.albumArt}
           alt="Album Art"
-          className="w-14 h-15 mb-1 rounded"
+          className="p-1 md:p-2 w-[50%] md:w-[40%] h-[30%] mb-1 rounded"
         />
       )}
-      <strong className="max-w-[10rem] overflow-hidden text-ellipsis whitespace-nowrap">
+      <strong className="text-[15px] md:text-[15px] px-1 overflow-hidden text-ellipsis whitespace-nowrap">
         {cell.name}
       </strong>
-      <p className="text-s max-w-[10rem] overflow-hidden text-ellipsis whitespace-nowrap">
+      <p className="text-[10px] md:text-[15px] px-1 overflow-hidden text-ellipsis whitespace-nowrap">
         {cell.artist}
       </p>
     </div>
@@ -562,7 +562,7 @@ const fetchUserData = async () => {
 
   <div
     className="min-h-screen bg-blue-950 relative overflow-hidden pt-10">
-       <ParticleBackground/>
+      
        
     {/* Log Out Section */}
     <div className= "fixed top-4 right-4 h-[3rem] w-[4rem] flex flex-col items-center bg-gray-500 rounded ">  
@@ -590,7 +590,7 @@ const fetchUserData = async () => {
 
       {/* Search Section */}
         <div className="flex flex-col relative z-10 items-center mt-16 ">
-          <div className="w-full max-w-lg text-center">
+          <div className="w-[50%] max-w-lg text-center">
               <input
                 id="search-bar"
                 type="text"
@@ -620,7 +620,7 @@ const fetchUserData = async () => {
 
       {/* Song Table */}
       <div className="container relative px-10 z-10">
-      <div className='mt-10 w-[40rem] flex justify-center bg-gray-400 overflow-hidden rounded-2xl shadow-md'>
+      <div className='mt-10 w-[80%] md:w-[60%] flex justify-center bg-gray-400 overflow-hidden rounded-2xl shadow-md'>
       <table className="w-[100%] border-collapse">
       <tbody>
         {Array.isArray(tableData) && tableData.map((row, rowIndex) => (
@@ -634,7 +634,7 @@ const fetchUserData = async () => {
                       selectedCell?.row === rowIndex && selectedCell?.col === colIndex 
                         ? "bg-blue-200 text-white"  // Highlighted style
                         : "bg-gray-400 text-gray-950" // Default style
-                    } p-4 w-40 h-16 
+                    } p-1 max-w-[5rem] h-[5rem]
                   ${
                   colIndex !== 1 ? 'cursor-pointer hover:bg-gray-700 hover:-translate-y-1 transition ' : ''
                   } 
@@ -644,7 +644,7 @@ const fetchUserData = async () => {
               >
                 {/* Column 1 (Arrow Image) */}
                 {colIndex === 1 ? (
-                  <img src={cell?.imgSrc} alt="Arrow" className="w-10 h-10 mx-auto" />
+                  <img src={cell?.imgSrc} alt="Arrow" className="w-[2rem] h-10 mx-auto" />
                 ) : (
                   // Column 0 or 2 (Song Information and Delete Button)
                   cell ? (
@@ -749,24 +749,25 @@ const fetchUserData = async () => {
           </div>
 
 
-      {/* Corner Box Showing Current Song Playing and Queue */ }
-      <div className=" fixed bottom-4 right-4 h-[20rem] w-[20rem] bg-gray-700 overflow-hidden rounded-2xl shadow-md
+      {/* Bottom Section showing Current Track (visible on smaller screens) */}
+      <div className="lg:hidden fixed inset-x-0 z-10 bottom-0 bg-gray-900">
+        {currentTrack ? (
+          <CurrTrack track={currentTrack} />
+        ) : (
+          <div className="flex flex-col items-center align-center">
+          <p className="text-white">No song currently playing</p>
+          </div>
+        )}
+      </div>
+
+      {/* Corner Box Showing Current Song Playing and Queue (visible on larger screens)*/ }
+      <div className=" hidden lg:block fixed bottom-4 right-4 h-[20rem] w-[20rem] 
+          bg-gray-700 overflow-hidden rounded-2xl shadow-md 
           sm:bottom-8 md:bottom-10">
             
             {/* Now Playing */}
             {currentTrack ? (
               <CurrTrack track={currentTrack} />
-              /*
-              <div>
-                <h3 className="text-white mb-2 p-1">Now Playing</h3>
-                <div className="flex items-center space-x-4">
-                  <img src={currentTrack.albumArt} alt="Album cover" className="h-[5rem] w-[5rem] rounded-lg p-1" />
-                  <p className="text-white max-w-[10rem] ">
-                    <strong>{currentTrack.name}</strong> by {currentTrack.artist}
-                  </p>
-                </div>
-              </div>
-              */
             ) : (
               <div className="flex flex-col items-center align-center">
               <p className="text-white">No song currently playing</p>

@@ -16,7 +16,7 @@ export default function WelcomePage() {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-black">
       <ParticleBackground/>
-      <h1 className="text-white z-10 text-3xl mb-6">Queue The Song</h1>
+      <div className="text-white rounded-lg z-10 text-3xl mb-6">Queue The Song</div>
       <button
         onClick={handleLogin}
         className="bg-green-500 z-10 text-white px-6 py-3 rounded-lg text-xl font-bold hover:bg-green-600 transition"
